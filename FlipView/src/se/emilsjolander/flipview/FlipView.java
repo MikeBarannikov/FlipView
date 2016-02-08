@@ -1504,7 +1504,7 @@ public class FlipView extends FrameLayout {
             // TODO: takes all views between the current one and the destination one, should be limited by a number
             if (mCurrentPageIndex < page) {
                 mFlipDistance = 0;
-                mCascadeEndFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (page - mCurrentPageIndex - 1);
+                mCascadeEndFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (getPageCount() - 2);
                 for (int i = mCurrentPageIndex; i <= page; i++) {
                     mCascadeViews.add(mAdapter.getView(i, null, this));
                 }
@@ -1512,7 +1512,7 @@ public class FlipView extends FrameLayout {
                 for (int i = page; i <= mCurrentPageIndex; i++) {
                     mCascadeViews.add(mAdapter.getView(i, null, this));
                 }
-                mFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (mCurrentPageIndex - page - 1);
+                mFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (getPageCount() - 2);
                 mCascadeEndFlipDistance = 0;
             }
 

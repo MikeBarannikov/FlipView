@@ -1532,7 +1532,7 @@ public class FlipView extends FrameLayout {
         smoothFlipTo(mCurrentPageIndex + delta);
     }
 
-    public void smoothFlipToDistance(int distance) {
+    public void smoothFlipToDistance(int distance, int flipDuration) {
         if (distance < 0 || distance > (mPageCount - 1) * FLIP_DISTANCE_PER_PAGE) {
             throw new IllegalArgumentException("That distance does not exist");
         }
@@ -1543,7 +1543,10 @@ public class FlipView extends FrameLayout {
             endFlip();
             mCascadeEndFlipDistance = start + delta;
             mIsFlippingToDistance = true;
-            mScroller.startScroll(0, start, 0, delta, getFlipDuration(delta));
+            if (flipDuration == 0) {
+                flipDuration = getFlipDuration(delta);
+            }
+            mScroller.startScroll(0, start, 0, delta, flipDuration);
         }
 
         invalidate();
@@ -1643,5 +1646,4 @@ public class FlipView extends FrameLayout {
         mEmptyView = emptyView;
         updateEmptyStatus();
     }
-
 }

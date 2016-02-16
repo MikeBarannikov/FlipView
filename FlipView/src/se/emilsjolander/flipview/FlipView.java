@@ -8,6 +8,7 @@ import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
+import android.graphics.Bitmap;
 import android.graphics.Camera;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -17,6 +18,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.graphics.Shader;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.VelocityTrackerCompat;
@@ -137,6 +139,7 @@ public class FlipView extends FrameLayout {
 
     // cascade flipping
     private boolean mIsFlippingCascade = false;
+    private boolean mCascadeBitmapsReady = false;
     private int mCascadeOffset = 30;
     private int mMaxSinglePageFlipAnimDuration = 360; // in ms
     private int mCascadeFlipDuration = 1000;
@@ -146,6 +149,12 @@ public class FlipView extends FrameLayout {
     // distance listener
     private OnDistanceListener mOnDistanceListener;
     private boolean mIsFlippingToDistance = false;
+
+    // api 18
+    Bitmap mBitmap;
+    Canvas mCanvas;
+    Bitmap mBitmapR;
+    Canvas mCanvasR;
 
     // keep track of pointer
     private float mLastX = -1;
@@ -375,6 +384,21 @@ public class FlipView extends FrameLayout {
         mRightRect.right = getWidth();
         mRightRect.bottom = getHeight();
 
+        if (mBitmap == null) {
+            mBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+            mCanvas = new Canvas(mBitmap);
+            mBitmapR = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+            mCanvasR = new Canvas(mBitmapR);
+        }
+
+        // prepare bitmaps for first and last views (API 18)
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2 &&
+                mIsFlippingCascade && !mCascadeViews.isEmpty() && !mCascadeBitmapsReady) {
+            mCascadeBitmapsReady = true;
+            mCascadeViews.get(mCascadeViews.size() - 1).draw(mCanvas);
+            mCascadeViews.get(0).draw(mCanvasR);
+        }
+
         initializeGradient();
     }
 
@@ -511,6 +535,22 @@ public class FlipView extends FrameLayout {
 
         // return view
         return v;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (mBitmap != null) {
+            mBitmap.recycle();
+        }
+        mCanvas = null;
+        mBitmap = null;
+
+        if (mBitmapR != null) {
+            mBitmapR.recycle();
+        }
+        mCanvasR = null;
+        mBitmapR = null;
+        super.onDetachedFromWindow();
     }
 
     @Override
@@ -837,10 +877,16 @@ public class FlipView extends FrameLayout {
     }
 
     private void drawCascade(Canvas canvas) {
+        setDrawWithLayer(this, true);
         final int prevViewIdx = getPrevViewIdx();
         final int nextViewIdx = getNextViewIdx();
         drawCascadePreviousHalf(canvas, prevViewIdx);
         drawCascadeNextHalf(canvas, nextViewIdx);
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            drawApi18(canvas);
+        }
+
         drawCascadeFlippingHalf(canvas, prevViewIdx, nextViewIdx);
     }
 
@@ -869,8 +915,6 @@ public class FlipView extends FrameLayout {
             canvas.clipRect(isFlippingVertically() ? mTopRect : mLeftRect);
 
             final View v = mCascadeViews.get(prevViewIdx);
-
-            // if the view does not exist, skip drawing it
             setDrawWithLayer(v, true);
             drawChild(canvas, v, 0);
 
@@ -884,11 +928,27 @@ public class FlipView extends FrameLayout {
             canvas.clipRect(isFlippingVertically() ? mBottomRect : mRightRect);
 
             final View v = mCascadeViews.get(nextViewIdx);
-
-            // if the view does not exist, skip drawing it
             setDrawWithLayer(v, true);
             drawChild(canvas, v, 0);
 
+            canvas.restore();
+        }
+    }
+
+    private void drawApi18(Canvas canvas) {
+        if (mFlipDistance >= 90) {
+            canvas.save();
+            final Rect drawingRect = isFlippingVertically() ? mBottomRect : mRightRect;
+            canvas.clipRect(drawingRect);
+            canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+            canvas.restore();
+        }
+
+        if (mCascadeEndFlipDistance - mFlipDistance <= 90) {
+            canvas.save();
+            final Rect drawingRect = isFlippingVertically() ? mTopRect : mLeftRect;
+            canvas.clipRect(drawingRect);
+            canvas.drawBitmap(mBitmapR, drawingRect, drawingRect, null);
             canvas.restore();
         }
     }
@@ -996,15 +1056,21 @@ public class FlipView extends FrameLayout {
      */
     private void drawPreviousHalf(Canvas canvas) {
         canvas.save();
-        canvas.clipRect(isFlippingVertically() ? mTopRect : mLeftRect);
+        final Rect drawingRect = isFlippingVertically() ? mTopRect : mLeftRect;
+        canvas.clipRect(drawingRect);
 
         final float degreesFlipped = getDegreesFlipped();
         final Page p = degreesFlipped >= 90 ? mPreviousPage : mCurrentPage;
 
         // if the view does not exist, skip drawing it
         if (p.valid) {
-            setDrawWithLayer(p.v, true);
-            drawChild(canvas, p.v, 0);
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2 && degreesFlipped < 90) {
+                p.v.draw(mCanvas);
+                canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+            } else {
+                setDrawWithLayer(p.v, true);
+                drawChild(canvas, p.v, 0);
+            }
         }
 
         if (mDrawShadows) {
@@ -1034,15 +1100,21 @@ public class FlipView extends FrameLayout {
      */
     private void drawNextHalf(Canvas canvas) {
         canvas.save();
-        canvas.clipRect(isFlippingVertically() ? mBottomRect : mRightRect);
+        final Rect drawingRect = isFlippingVertically() ? mBottomRect : mRightRect;
+        canvas.clipRect(drawingRect);
 
         final float degreesFlipped = getDegreesFlipped();
         final Page p = degreesFlipped >= 90 ? mCurrentPage : mNextPage;
 
         // if the view does not exist, skip drawing it
         if (p.valid) {
-            setDrawWithLayer(p.v, true);
-            drawChild(canvas, p.v, 0);
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2 && degreesFlipped >= 90) {
+                p.v.draw(mCanvas);
+                canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+            } else {
+                setDrawWithLayer(p.v, true);
+                drawChild(canvas, p.v, 0);
+            }
         }
 
         if (mDrawShadows) {
@@ -1520,6 +1592,7 @@ public class FlipView extends FrameLayout {
                 addView(mCascadeViews.get(i));
                 mCascadeViews.get(i).setVisibility(VISIBLE);
             }
+            mCascadeBitmapsReady = false;
 
             mCurrentPageIndex = page;
             mScroller.startScroll(0, (int) mFlipDistance, 0, (int) (mCascadeEndFlipDistance - mFlipDistance), mCascadeFlipDuration);

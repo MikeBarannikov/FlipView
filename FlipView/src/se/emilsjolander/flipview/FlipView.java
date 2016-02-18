@@ -156,6 +156,9 @@ public class FlipView extends FrameLayout {
     Bitmap mBitmapR;
     Canvas mCanvasR;
 
+    // scroll speed multiplier
+    private float mSpeedMultiplier = 1f;
+
     // keep track of pointer
     private float mLastX = -1;
     private float mLastY = -1;
@@ -624,6 +627,11 @@ public class FlipView extends FrameLayout {
                         & MotionEvent.ACTION_POINTER_INDEX_MASK;
                 mLastX = MotionEventCompat.getX(ev, mActivePointerId);
                 mLastY = MotionEventCompat.getY(ev, mActivePointerId);
+                if (isFlippingVertically()) {
+                    mSpeedMultiplier = (mLastY - getTop()) / getHeight();
+                } else {
+                    mSpeedMultiplier = (mLastX - getLeft()) / getWidth();
+                }
 
                 mIsFlipping = !mScroller.isFinished() | mPeakAnim != null;
                 mIsUnableToFlip = false;
@@ -719,7 +727,7 @@ public class FlipView extends FrameLayout {
                         mLastX = x;
                         mLastY = y;
 
-                        float deltaFlipDistance = 0;
+                        float deltaFlipDistance;
                         if (mIsFlippingVertically) {
                             deltaFlipDistance = deltaY;
                         } else {
@@ -727,7 +735,7 @@ public class FlipView extends FrameLayout {
                         }
 
                         deltaFlipDistance /= ((isFlippingVertically() ? getHeight()
-                                : getWidth()) / FLIP_DISTANCE_PER_PAGE);
+                                : getWidth()) / FLIP_DISTANCE_PER_PAGE) * mSpeedMultiplier;
                         setFlipDistance(mFlipDistance + deltaFlipDistance, true);
 
                         final int minFlipDistance = 0;

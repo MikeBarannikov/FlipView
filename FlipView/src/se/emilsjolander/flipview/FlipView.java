@@ -736,7 +736,8 @@ public class FlipView extends FrameLayout {
 
                         deltaFlipDistance /= ((isFlippingVertically() ? getHeight()
                                 : getWidth()) / FLIP_DISTANCE_PER_PAGE) * mSpeedMultiplier;
-                        setFlipDistance(mFlipDistance + deltaFlipDistance, true);
+                        final float newFlipDistance = mFlipDistance + deltaFlipDistance;
+                        setFlipDistance(newFlipDistance < 0 ? 0 : newFlipDistance, true);
 
                         final int minFlipDistance = 0;
                         final int maxFlipDistance = (mPageCount - 1)

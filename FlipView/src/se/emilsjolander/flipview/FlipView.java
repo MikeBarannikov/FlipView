@@ -458,8 +458,7 @@ public class FlipView extends FrameLayout {
 
         mFlipDistance = flipDistance;
 
-        final int currentPageIndex = (int) Math.round(mFlipDistance
-                / FLIP_DISTANCE_PER_PAGE);
+        final int currentPageIndex = Math.round(mFlipDistance / FLIP_DISTANCE_PER_PAGE);
 
         if (mCurrentPageIndex != currentPageIndex) {
             mCurrentPageIndex = currentPageIndex;
@@ -736,7 +735,13 @@ public class FlipView extends FrameLayout {
 
                         deltaFlipDistance /= ((isFlippingVertically() ? getHeight()
                                 : getWidth()) / FLIP_DISTANCE_PER_PAGE) * mSpeedMultiplier;
-                        final float newFlipDistance = mFlipDistance + deltaFlipDistance;
+                        float newFlipDistance = mFlipDistance + deltaFlipDistance;
+
+                        // check for max possible distance
+                        if (newFlipDistance > mPageCount * FLIP_DISTANCE_PER_PAGE + FLIP_DISTANCE_PER_PAGE / 2 - 1) {
+                            newFlipDistance = mPageCount * FLIP_DISTANCE_PER_PAGE + FLIP_DISTANCE_PER_PAGE / 2 - 1;
+                        }
+
                         setFlipDistance(newFlipDistance < -FLIP_DISTANCE_PER_PAGE ? -FLIP_DISTANCE_PER_PAGE : newFlipDistance, true);
 
                         final int minFlipDistance = 0;

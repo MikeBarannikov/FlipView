@@ -238,11 +238,10 @@ public class FlipView extends FrameLayout {
 
         a.recycle();
 
-        init();
+        init(context);
     }
 
-    private void init() {
-        final Context context = getContext();
+    private void init(Context context) {
         final ViewConfiguration configuration = ViewConfiguration.get(context);
 
         mScroller = new Scroller(context, flipInterpolator);

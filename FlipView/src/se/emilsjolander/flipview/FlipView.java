@@ -151,10 +151,10 @@ public class FlipView extends FrameLayout {
     private boolean mIsFlippingToDistance = false;
 
     // api 18
-    Bitmap mBitmap;
-    Canvas mCanvas;
-    Bitmap mBitmapR;
-    Canvas mCanvasR;
+    private Bitmap mBitmap;
+    private Canvas mCanvas;
+    private Bitmap mBitmapR;
+    private Canvas mCanvasR;
 
     // scroll speed multiplier
     private float mSpeedMultiplier = 1f;
@@ -366,36 +366,40 @@ public class FlipView extends FrameLayout {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         layoutChildren();
 
+        final int width = getWidth();
+        final int height = getHeight();
+
         mTopRect.top = 0;
         mTopRect.left = 0;
-        mTopRect.right = getWidth();
-        mTopRect.bottom = getHeight() / 2;
+        mTopRect.right = width;
+        mTopRect.bottom = height / 2;
 
-        mBottomRect.top = getHeight() / 2;
+        mBottomRect.top = height / 2;
         mBottomRect.left = 0;
-        mBottomRect.right = getWidth();
-        mBottomRect.bottom = getHeight();
+        mBottomRect.right = width;
+        mBottomRect.bottom = height;
 
         mLeftRect.top = 0;
         mLeftRect.left = 0;
-        mLeftRect.right = getWidth() / 2;
-        mLeftRect.bottom = getHeight();
+        mLeftRect.right = width / 2;
+        mLeftRect.bottom = height;
 
         mRightRect.top = 0;
-        mRightRect.left = getWidth() / 2;
-        mRightRect.right = getWidth();
-        mRightRect.bottom = getHeight();
+        mRightRect.left = width / 2;
+        mRightRect.right = width;
+        mRightRect.bottom = height;
 
-        if (mBitmap == null) {
-            mBitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+        if (mBitmap == null && width > 0 && height > 0) {
+            mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             mCanvas = new Canvas(mBitmap);
-            mBitmapR = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+            mBitmapR = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             mCanvasR = new Canvas(mBitmapR);
         }
 
         // prepare bitmaps for first and last views (API 18)
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2 &&
-                mIsFlippingCascade && !mCascadeViews.isEmpty() && !mCascadeBitmapsReady) {
+                mIsFlippingCascade && !mCascadeViews.isEmpty() && !mCascadeBitmapsReady &&
+                width > 0 && height > 0) {
             mCascadeBitmapsReady = true;
             mCascadeViews.get(mCascadeViews.size() - 1).draw(mCanvas);
             mCascadeViews.get(0).draw(mCanvasR);
@@ -953,7 +957,9 @@ public class FlipView extends FrameLayout {
             canvas.save();
             final Rect drawingRect = isFlippingVertically() ? mBottomRect : mRightRect;
             canvas.clipRect(drawingRect);
-            canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+            if (mBitmap != null) {
+                canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+            }
             canvas.restore();
         }
 
@@ -961,7 +967,9 @@ public class FlipView extends FrameLayout {
             canvas.save();
             final Rect drawingRect = isFlippingVertically() ? mTopRect : mLeftRect;
             canvas.clipRect(drawingRect);
-            canvas.drawBitmap(mBitmapR, drawingRect, drawingRect, null);
+            if (mBitmapR != null) {
+                canvas.drawBitmap(mBitmapR, drawingRect, drawingRect, null);
+            }
             canvas.restore();
         }
     }
@@ -1079,7 +1087,9 @@ public class FlipView extends FrameLayout {
         if (p.valid) {
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2 && degreesFlipped < 90) {
                 p.v.draw(mCanvas);
-                canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+                if (mBitmap != null) {
+                    canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+                }
             } else {
                 setDrawWithLayer(p.v, true);
                 drawChild(canvas, p.v, 0);
@@ -1123,7 +1133,9 @@ public class FlipView extends FrameLayout {
         if (p.valid) {
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR2 && degreesFlipped >= 90) {
                 p.v.draw(mCanvas);
-                canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+                if (mBitmap != null) {
+                    canvas.drawBitmap(mBitmap, drawingRect, drawingRect, null);
+                }
             } else {
                 setDrawWithLayer(p.v, true);
                 drawChild(canvas, p.v, 0);

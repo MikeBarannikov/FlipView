@@ -145,6 +145,7 @@ public class FlipView extends FrameLayout {
     private int mCascadeFlipDuration = 1000;
     private int mCascadeEndFlipDistance = -1;
     private List<View> mCascadeViews = new ArrayList<>();
+    private boolean mIsCascadeAnimationPrepared = true;
 
     // distance listener
     private OnDistanceListener mOnDistanceListener;
@@ -274,6 +275,7 @@ public class FlipView extends FrameLayout {
         // clear cascade views
         removeAllViews();
         mCascadeViews.clear();
+        mIsCascadeAnimationPrepared = false;
 
         // remove all the current views
         recycleActiveViews();
@@ -428,6 +430,7 @@ public class FlipView extends FrameLayout {
             mCurrentPageId = -1;
             removeAllViews();
             mCascadeViews.clear();
+            mIsCascadeAnimationPrepared = false;
             return;
         }
 
@@ -852,7 +855,9 @@ public class FlipView extends FrameLayout {
             } else {
                 if (mIsFlippingCascade) {
                     drawCascade(canvas);
-                    mFlipDistance = mCascadeEndFlipDistance;
+                    if (!mIsCascadeAnimationPrepared) {
+                        mFlipDistance = mCascadeEndFlipDistance;
+                    }
                 } else {
                     setDrawWithLayer(mCurrentPage.v, false);
                     hideOtherPages(mCurrentPage);
@@ -1474,6 +1479,7 @@ public class FlipView extends FrameLayout {
         // remove all the current views
         removeAllViews();
         mCascadeViews.clear();
+        mIsCascadeAnimationPrepared = false;
 
         mAdapter = adapter;
         mPageCount = adapter == null ? 0 : mAdapter.getCount();
@@ -1535,6 +1541,7 @@ public class FlipView extends FrameLayout {
         if (!enabled && mCurrentPageIndex != INVALID_PAGE_POSITION) {
             removeAllViews();
             mCascadeViews.clear();
+            mIsCascadeAnimationPrepared = false;
             mFlipDistance = mCurrentPageIndex * FLIP_DISTANCE_PER_PAGE;
             mCurrentPageIndex = -1;
         }
@@ -1593,37 +1600,47 @@ public class FlipView extends FrameLayout {
             mCascadeEndFlipDistance = start + delta;
             mScroller.startScroll(0, start, 0, delta, getFlipDuration(delta));
         } else {
-            endFlip();
-            // get views from adapter to draw
-            recycleActiveViews();
-            removeAllViews();
-            mCascadeViews.clear();
-            // TODO: takes all views between the current one and the destination one, should be limited by a number
             if (mCurrentPageIndex < page) {
                 mFlipDistance = 0;
-                mCascadeEndFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (getPageCount() - 2);
-                for (int i = mCurrentPageIndex; i <= page; i++) {
-                    mCascadeViews.add(mAdapter.getView(i, null, this));
-                }
             } else {
-                for (int i = page; i <= mCurrentPageIndex; i++) {
-                    mCascadeViews.add(mAdapter.getView(i, null, this));
-                }
                 mFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (getPageCount() - 2);
-                mCascadeEndFlipDistance = 0;
             }
-
-            for (int i = 0; i < mCascadeViews.size(); i++) {
-                addView(mCascadeViews.get(i));
-                mCascadeViews.get(i).setVisibility(VISIBLE);
-            }
-            mCascadeBitmapsReady = false;
 
             mCurrentPageIndex = page;
+            mIsCascadeAnimationPrepared = false;
             mScroller.startScroll(0, (int) mFlipDistance, 0, (int) (mCascadeEndFlipDistance - mFlipDistance), mCascadeFlipDuration);
         }
 
         invalidate();
+    }
+
+    public void prepareCascadeFlip(int page) {
+        endFlip();
+        // get views from adapter to draw
+        recycleActiveViews();
+        removeAllViews();
+        mCascadeViews.clear();
+        // TODO: takes all views between the current one and the destination one, should be limited by a number
+        if (mCurrentPageIndex < page) {
+            mFlipDistance = 0;
+            mCascadeEndFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (getPageCount() - 2);
+            for (int i = mCurrentPageIndex; i <= page; i++) {
+                mCascadeViews.add(mAdapter.getView(i, null, this));
+            }
+        } else {
+            for (int i = page; i <= mCurrentPageIndex; i++) {
+                mCascadeViews.add(mAdapter.getView(i, null, this));
+            }
+            mFlipDistance = FLIP_DISTANCE_PER_PAGE + mCascadeOffset * (getPageCount() - 2);
+            mCascadeEndFlipDistance = 0;
+        }
+
+        for (int i = 0; i < mCascadeViews.size(); i++) {
+            addView(mCascadeViews.get(i));
+            mCascadeViews.get(i).setVisibility(VISIBLE);
+        }
+        mCascadeBitmapsReady = false;
+        mIsCascadeAnimationPrepared = true;
     }
 
     public void smoothFlipBy(int delta) {

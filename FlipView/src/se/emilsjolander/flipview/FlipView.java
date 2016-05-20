@@ -618,6 +618,11 @@ public class FlipView extends FrameLayout {
 
                 if ((mIsFlippingVertically && yDiff > mTouchSlop && yDiff > xDiff)
                         || (!mIsFlippingVertically && xDiff > mTouchSlop && xDiff > yDiff)) {
+                    if (isFlippingVertically()) {
+                        mSpeedMultiplier = (Math.abs(mLastY - (dy < 0 ? getTop() : getBottom()))) / getHeight();
+                    } else {
+                        mSpeedMultiplier = (Math.abs(mLastX - (dx < 0 ? getLeft() : getRight()))) / getWidth();
+                    }
                     mIsFlipping = true;
                     mLastX = x;
                     mLastY = y;
@@ -632,12 +637,7 @@ public class FlipView extends FrameLayout {
                         & MotionEvent.ACTION_POINTER_INDEX_MASK;
                 mLastX = MotionEventCompat.getX(ev, mActivePointerId);
                 mLastY = MotionEventCompat.getY(ev, mActivePointerId);
-                if (isFlippingVertically()) {
-                    mSpeedMultiplier = (mLastY - getTop()) / getHeight();
-                } else {
-                    mSpeedMultiplier = (mLastX - getLeft()) / getWidth();
-                }
-
+                mSpeedMultiplier = 0.5f;
                 mIsFlipping = !mScroller.isFinished() | mPeakAnim != null;
                 mIsUnableToFlip = false;
                 mLastTouchAllowed = true;

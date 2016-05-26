@@ -828,6 +828,9 @@ public class FlipView extends FrameLayout {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        if (!mIsFlippingEnabled) {
+            mIsFlippingEnabled = true;
+        }
         if (mPageCount < 1) {
             return;
         }
@@ -1573,6 +1576,7 @@ public class FlipView extends FrameLayout {
     }
 
     public void flipTo(int page) {
+        mIsFlippingEnabled = false;
         setFlippingCascade(false);
         mIsFlippingToDistance = false;
         mCascadeEndFlipDistance = INVALID_FLIP_DISTANCE;

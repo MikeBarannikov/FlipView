@@ -1581,7 +1581,7 @@ public class FlipView extends FrameLayout {
         mIsFlippingToDistance = false;
         mCascadeEndFlipDistance = INVALID_FLIP_DISTANCE;
         if (page < 0 || page > mPageCount - 1) {
-            throw new IllegalArgumentException("That page does not exist");
+            throw new IllegalArgumentException("Flipping to page " + page + " page count " + mPageCount);
         }
         endFlip();
         setFlipDistance(page * FLIP_DISTANCE_PER_PAGE, true);

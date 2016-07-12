@@ -86,6 +86,11 @@ public class FlipView extends FrameLayout {
         }
     }
 
+    // animation property for ObjectAnimator
+    public static final String FLIP_DISTANCE = "flipDistance";
+
+    // epsilon for float comparison
+    private static final float EPSILON = 0.1f;
     // this will be the postion when there is not data
     private static final int INVALID_PAGE_POSITION = -1;
     // "null" flip distance
@@ -458,6 +463,9 @@ public class FlipView extends FrameLayout {
             endScroll();
             if (mOnDistanceListener != null) {
                 postDistancePassed();
+            }
+            if (reDraw) {
+                invalidate();
             }
             return;
         }
@@ -851,21 +859,19 @@ public class FlipView extends FrameLayout {
             }
         } else {
             endScroll();
-            if (mIsFlippingToDistance) {
+            if (mIsFlippingCascade) {
+                drawCascade(canvas);
+                if (!mIsCascadeAnimationPrepared) {
+                    mFlipDistance = mCascadeEndFlipDistance;
+                }
+            } else if (mFlipDistance % FLIP_DISTANCE_PER_PAGE > EPSILON) {
                 mIsFlippingToDistance = false;
                 mFlipDistance = mCascadeEndFlipDistance;
                 drawSequential(canvas);
             } else {
-                if (mIsFlippingCascade) {
-                    drawCascade(canvas);
-                    if (!mIsCascadeAnimationPrepared) {
-                        mFlipDistance = mCascadeEndFlipDistance;
-                    }
-                } else {
-                    setDrawWithLayer(mCurrentPage.v, false);
-                    hideOtherPages(mCurrentPage);
-                    drawChild(canvas, mCurrentPage.v, 0);
-                }
+                setDrawWithLayer(mCurrentPage.v, false);
+                hideOtherPages(mCurrentPage);
+                drawChild(canvas, mCurrentPage.v, 0);
             }
 
             // dispatch listener event now that we have "landed" on a page.
@@ -1662,13 +1668,24 @@ public class FlipView extends FrameLayout {
             endFlip();
             mCascadeEndFlipDistance = start + delta;
             mIsFlippingToDistance = true;
-            if (flipDuration == 0) {
+            if (flipDuration == -1) {
                 flipDuration = getFlipDuration(delta);
             }
             mScroller.startScroll(0, start, 0, delta, flipDuration);
         }
 
         invalidate();
+    }
+
+    public void setFlipDistance(float flipDistance) {
+        endFlip();
+        mIsFlippingToDistance = true;
+        mCascadeEndFlipDistance = (int) flipDistance;
+        setFlipDistance(flipDistance, true);
+    }
+
+    public float getFlipDistance() {
+        return mFlipDistance;
     }
 
     /**

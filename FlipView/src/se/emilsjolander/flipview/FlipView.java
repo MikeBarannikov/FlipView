@@ -397,9 +397,9 @@ public class FlipView extends FrameLayout {
         mRightRect.bottom = height;
 
         if (mBitmap == null && width > 0 && height > 0) {
-            mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
             mCanvas = new Canvas(mBitmap);
-            mBitmapR = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            mBitmapR = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
             mCanvasR = new Canvas(mBitmapR);
         }
 

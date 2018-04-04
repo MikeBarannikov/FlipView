@@ -1,29 +1,26 @@
-The Old One
-=========
-
 FlipView
 =========
-
+[![](https://jitpack.io/v/emanuelet/FlipView.svg)](https://jitpack.io/#emanuelet/FlipView)
 About
 -----
 This library is made to be very easy to use and at the same time be feature complete.
-With only a few lines of code you can have a flipping animation between your views, 
+With only a few lines of code you can have a flipping animation between your views,
 this looks and acts very much like the Flipboard application.
 
 All flipping animations should be very smooth and i have added lighting effects so the flipping look more realistic.
 
-Honeycomb (api lvl 11) or above is required for this library to work properly, however it will compile (and run, though without good performance) for much lower versions with just a few tweaks.
+Ice Cream Sandwich (API 15) is required for this library.
 
 Download a compiled version of the sample here:
 https://www.dropbox.com/s/tvmdhre4ra8l41p/sample-debug-unaligned.apk
 
 Installing
 ---------------
-###Gradle
+
 Add the following gradle dependency exchanging `x.x.x` for the latest release.
 ```groovy
 dependencies {
-    compile 'se.emilsjolander:android-flipview:x.x.x'
+    implementation 'se.emilsjolander:android-flipview:x.x.x'
 }
 ```
 
@@ -31,7 +28,7 @@ Usage
 -----
 After installing, create a layout file container a something similar to this:
 ```xml
-<se.emilsjolander.flipview.FlipView xmlns:android="http://schemas.android.com/apk/res/android"
+<se.emilsjolander.flipview.FlipView
     xmlns:flipview="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -81,7 +78,7 @@ void peakNext(boolean once);
 void peakPrevious(boolean once);
 ```
 
-```FlipView``` supports both vertical (default) and horizontal flipping. 
+```FlipView``` supports both vertical (default) and horizontal flipping.
 I feel it would be wrong to change the orientation dynamically so i have limited it to being set via xml.
 ```java
 boolean isFlippingVertically();

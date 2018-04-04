@@ -133,10 +133,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         list4.add("http://p1.pichost.me/i/29/1522634.jpg");
         list4.add("http://www.tintup.com/blog/wp-content/uploads/2014/05/fame.jpg");
         list4.add("http://www.prettycrown.com/wp-content/uploads/2015/08/desktop-wallpapers.jpg");
-        mPagerAdapter1 = new SamplePagerAdapter(getFragmentManager());
-        mPagerAdapter2 = new SamplePagerAdapter(getFragmentManager());
-        mPagerAdapter3 = new SamplePagerAdapter(getFragmentManager());
-        mPagerAdapter4 = new SamplePagerAdapter(getFragmentManager());
+        mPagerAdapter1 = new SamplePagerAdapter(getSupportFragmentManager());
+        mPagerAdapter2 = new SamplePagerAdapter(getSupportFragmentManager());
+        mPagerAdapter3 = new SamplePagerAdapter(getSupportFragmentManager());
+        mPagerAdapter4 = new SamplePagerAdapter(getSupportFragmentManager());
         mPagerAdapter1.setItems(list1);
         mPagerAdapter2.setItems(list2);
         mPagerAdapter3.setItems(list3);
